@@ -1,24 +1,30 @@
-const symbol = require('../helpers/symbols')
+const SYMBOLS = require('../helpers/symbols')
 
-module.exports = function expand(number) {
+module.exports = function expand(input) {
+  if (input === null || input === undefined) return NaN;
+  if (typeof input === 'number') return input;
 
-  let abbrIndex;
+  const raw = String(input).trim();
+  if (raw.length === 0) return NaN;
 
-  for (let i = symbol.length - 1; i >= 0; i--) {
-    const sym = symbol[i].toLowerCase();
-    const str = number.toString()
-    if (str.endsWith(sym.toLowerCase())) {
+  let abbrIndex = 0;
+  const lower = raw.toLowerCase();
+
+  for (let i = SYMBOLS.length - 1; i >= 0; i--) {
+    const sym = SYMBOLS[i].toLowerCase();
+    if (sym && lower.endsWith(sym)) {
       abbrIndex = i;
       break;
     }
   }
-  const abbr = symbol[abbrIndex];
-  const numberi = abbrIndex ? number.slice(0, -abbr.length) : number;
 
+  const suffix = SYMBOLS[abbrIndex];
+  const baseStr = suffix ? raw.slice(0, -suffix.length) : raw;
+  // Remove common grouping separators
+  const normalized = baseStr.replace(/[,\s]/g, '');
+  const num = parseFloat(normalized.replace(/_/g, ''));
+  if (!Number.isFinite(num)) return NaN;
 
-  const num = parseFloat(numberi);
-  const multiplier = abbrIndex ? 1e3 ** abbrIndex : 1;
-
-   return num * multiplier;
-
+  const multiplier = abbrIndex ? 10 ** (abbrIndex * 3) : 1;
+  return num * multiplier;
 }
